@@ -4,43 +4,78 @@ services:
       context: ./
       dockerfile: ./Dockerfile
     environment:
-      - "POSTGRES_URL=postgresql://postgres:mysecretpassword@postgres:5432/mydb?schema=public"
+      - "POSTGRES_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/mydb?schema=public&connection_limit=10"
       - "REDIS_URL=redis://redis:6379"
-    ports:
-      - "3000:3000"
+      - "ROOT_USERNAME=${ROOT_USERNAME}"
+      - "ROOT_PASSWORD=${ROOT_PASSWORD}"
+      - "JWT_SECRET=${JWT_SECRET}"
+      - "JWT_EXPIRY=604800"
+      - "DEMO_MODE=0"
+      - "PORT=3000"
+      - "API_PORT=3001"
+      - "CATCH_ALL_REDIRECT_URL=https://${API_DOMAIN}/public/catch-all-url.html"
+    expose:
+      - "3000"
     depends_on:
       - postgres
       - redis
+    networks:
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.evoclick-app.rule=Host(`${APP_DOMAIN}`)"
+      - "traefik.http.routers.evoclick-app.entrypoints=websecure"
+      - "traefik.http.routers.evoclick-app.tls.certResolver=letsencrypt"
+      - "traefik.http.services.evoclick-app.loadbalancer.server.port=3000"
 
   api:
     build:
       context: ./
       dockerfile: ./Dockerfile.api
     environment:
-      - "POSTGRES_URL=postgresql://postgres:mysecretpassword@postgres:5432/mydb?schema=public"
+      - "POSTGRES_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/mydb?schema=public&connection_limit=10"
       - "REDIS_URL=redis://redis:6379"
-      - "CATCH_ALL_REDIRECT_URL=http://localhost:3001/public/catch-all-url.html"
-    ports:
-      - "3001:3001"
+      - "ROOT_USERNAME=${ROOT_USERNAME}"
+      - "ROOT_PASSWORD=${ROOT_PASSWORD}"
+      - "JWT_SECRET=${JWT_SECRET}"
+      - "JWT_EXPIRY=604800"
+      - "DEMO_MODE=0"
+      - "PORT=3000"
+      - "API_PORT=3001"
+      - "CATCH_ALL_REDIRECT_URL=https://${API_DOMAIN}/public/catch-all-url.html"
+    expose:
+      - "3001"
     depends_on:
       - postgres
       - redis
+    networks:
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.evoclick-api.rule=Host(`${API_DOMAIN}`)"
+      - "traefik.http.routers.evoclick-api.entrypoints=websecure"
+      - "traefik.http.routers.evoclick-api.tls.certResolver=letsencrypt"
+      - "traefik.http.services.evoclick-api.loadbalancer.server.port=3001"
 
   postgres:
-    image: postgres
+    image: postgres:16-alpine
     restart: always
-    ports:
-      - "5432:5432"
     environment:
-      - POSTGRES_PASSWORD=mysecretpassword
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=mydb
     volumes:
-      - postgres:/var/lib/postgresql/data
+      - ../files/postgres:/var/lib/postgresql/data
+    networks:
+      - dokploy-network
 
   redis:
-    image: redis
+    image: redis:7-alpine
     restart: always
-    ports:
-      - "6379:6379"
+    volumes:
+      - ../files/redis:/data
+    networks:
+      - dokploy-network
 
-volumes:
-  postgres:
+networks:
+  dokploy-network:
+    external: true
