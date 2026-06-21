@@ -72,6 +72,8 @@ services:
 
   redis:
     image: redis:7-alpine
+    sysctls:
+      - vm.overcommit_memory=1
     restart: always
     volumes:
       - ../files/redis:/data
