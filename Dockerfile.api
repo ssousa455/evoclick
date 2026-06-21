@@ -1,7 +1,4 @@
-FROM node:18-alpine
-
-# Instala OpenSSL 1.1 (necessário para o Prisma)
-RUN apk add --no-cache openssl1.1-compat
+FROM node:18-bullseye
 
 COPY --from=golang:1.22-alpine /usr/local/go/ /usr/local/go/
 ENV PATH="/usr/local/go/bin:${PATH}"
