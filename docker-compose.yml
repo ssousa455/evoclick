@@ -28,6 +28,7 @@ services:
       - "traefik.http.routers.evoclick-app.tls.certResolver=letsencrypt"
       - "traefik.http.services.evoclick-app.loadbalancer.server.port=3000"
     #command: sh -c "npx prisma db push && npm start"
+    command: sh -c "npx prisma migrate deploy && npm start"
 
   api:
     build:
