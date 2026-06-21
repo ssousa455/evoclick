@@ -57,7 +57,7 @@ services:
       - "traefik.http.routers.evoclick-api.entrypoints=websecure"
       - "traefik.http.routers.evoclick-api.tls.certResolver=letsencrypt"
       - "traefik.http.services.evoclick-api.loadbalancer.server.port=3001"
-    command: sh -c "npx prisma db push && ./bin"
+    #command: sh -c "npx prisma db push && ./bin"
 
   postgres:
     image: postgres:16-alpine
